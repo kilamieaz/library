@@ -1,0 +1,953 @@
+<?php 
+fakta
+-middleware auth = membatasi hak akses jika belum login akan redirect ke page login
+-Auth::check -> jika user udah login => ditampilkan
+-Auth::guest -> jika user belum login => ditampilkan
+-prefix = membuat awalan route yg sama di group
+-method unsigned dan method foreign() (sepasang)
+// untuk menampilkan data penulis dalam skema REST
+    index => ['get' , 'admin/authors']    
+
+- ->addColumn(['data' => 'name', 'name' => 'name', 'title' => 'Nama'])
+    data  => yg berhubungan dengan database
+    name  => ?
+    title => tampilan di view nya (label)
+
+- {!! Form::text('name', null, ['class' => 'form-control']) !!}
+    - ini input type text
+    - name nya name = samakan dengan database
+    - value nya null
+
+
+
+
+singkronkan file .env
+php artisan make:auth -> buat authentication
+php artisan migrate   -> buat database
+ubah semua view menggunakan form LaravelColective
+
+// item(ASSET) tampilan
+isi (public) dengan => boostrap = isi folder fonts dan bootstrap.min.js dan bosstrap.min.css(bisa di pilih bootswatch)
+                       font-awesome = isi folder fonts dan font-awesome.min.css
+                       jquery = jquery.min.js       (65)
+memanggil item di atas ke dalam view induk (layouts->app.blade.php)
+<head>
+    font awesome
+    boostrap css
+    app.css
+</head>
+
+<script>
+    boostrap js 
+    jquery
+</script>
+
+// setelah itu install package laratrust (santigarcor/laratrust) membuat role dengan mudah
+daftarkan dalam providers dan aliases (config.app)
+        1.In order to install Laratrust in your Laravel project, just run the composer require command from your terminal:
+        composer require "santigarcor/laratrust:3.2.*"
+        
+        2.Then in your config/app.php add the following to the providers array:
+        Laratrust\LaratrustServiceProvider::class,
+        
+        3.In the same config/app.php add the following to the aliases array:
+        'Laratrust'   => Laratrust\LaratrustFacade::class,
+        
+        5.If you are going to use Middleware (requires Laravel 5.1 or later) you also need to add the following to routeMiddleware array in app/Http/Kernel.php:
+        
+        'role' => \Laratrust\Middleware\LaratrustRole::class,
+        'permission' => \Laratrust\Middleware\LaratrustPermission::class,
+        'ability' => \Laratrust\Middleware\LaratrustAbility::class,
+
+        4.Run the next command to publish all the configuration files:
+        php artisan vendor:publish --tag="laratrust"
+
+        using command
+        php artisan laratrust:setup
+
+        
+        
+
+// buat data palsu (seed)
+- buat seed (UsersSeeder)
+- daftarkan kedalam DatabaseSeeder
+
+// supaya gak error
+(AppServiceProvider)
+use Illuminate\Support\Facades\Schema;
+
+public function boot()
+{
+    Schema::defaultStringLength(191);
+}
+
+- php artisan migrate:refresh --seed
+
+//membuat user yang mendaftar memiliki role member
+(RegisterController)
+$memberRole = Role::where('name', 'member')->first();
+        $user->attachRole($memberRole);
+        return $user;
+
+
+//bikin route dengan awalan admin
+- menggunakan [prefix] di group kan
+- menggunakan resource (get,post,put,destroy) 
+
+
+// membuat model dan migration (untuk penulis(Author) dan buku(Book))
+- setting migration nya (one to many)
+- karna one to many di model nya ditambahkan relationship hasMany dan belongsTo
+
+// mengisi data apa saja yang boleh di isi (Mass Assignment)
+// 1.tidak pakai fillable
+$author = new App\Author;
+$author->name = 'Sultan Imam Muttaqin';
+$author->save();
+
+//pakai fillable
+App\Author::create('name' => 'Sultan Imam Muttaqin')
+
+- $fillable = ['name'] -> di author (penulis)
+- $fillable = ['title','author_id','amount'] -> di book (buku)
+
+// menyiapkan sample buku
+- data seed booksSeeder
+    use App/Author;
+    use App/Book;
+    $author1    = Author::create(['name' => 'sultan imam muttaqin']);
+    $book1      = Book::create(['title' => 'jalan menuju surga','amount' => 2, 'author_id' => $author1->id])
+
+
+
+// untuk menampilkan data penulis dalam skema REST
+    index => ['get' , 'admin/authors']  
+    // di AuthorsController->index 
+    - arahkan ke view  return view('authors.index');
+    - buat folder dan file index
+    // untuk menavigasikan ke halaman author di layouts master di tambahkan
+    left side of navbar
+    - <li><a href="/admin/authors"></a></li>
+
+// buat data table
+- download datatable dan di ambil (asset) yg di bawah ini
+    public/css/dataTables.bootstrap.css
+    public/css/jquery.dataTables.css
+    public/js/dataTables.bootstrap.min.js
+    public/js/jquery.dataTables.min.js
+    Folder public/images
+- load ke layout (master)
+    //untuk memudahkan membuat reponse yang sesuai dari server
+    - composer require yajra/laravel-datatables-oracle (versi terbaru)
+    //daftarkan ke dalam providers (config/app)
+    - Yajra\Datatables\DatatablesServiceProvider::class,
+
+    // di controller AuthorsController
+    - load model author     use App\Author;
+    - load html builder     use Yajra\Datatables\Html\Builder;
+    - load datatables       use Yajra\Datatables\Datatables;
+
+    if ($request->ajax()) {   //ini di ambil dari datatables(menghandle request ajax dari Data table)
+        $authors = Author::select(['id', 'name']);
+        return Datatables::of($authors)->make(true);
+    }
+
+    $html = $htmlBuilder  //akan menghasilkan html dan JS data table di view
+        ->addColumn(['data' => 'name', 'name'=>'name', 'title'=>'Nama']); // buat column dan 
+    return view('authors.index')->with(compact('html'));                  // di salurkan ke view  
+
+
+// dan di view nya index nya
+    di content
+    {!! $html->table(['class' => 'table-striped']) !!}
+    
+    di script
+    {!! $html->script() !!}
+
+// membatasi hak akses dengan role
+    - di route nya di tambahkan role:admin di dalam middleware
+    seketika member mendapatkan error jika mengakses halaman admin (403)
+    maka dari itu di file master navigasi yang mengarahkan ke halaman penulis di hilangkan dan hanya dapat
+    di lihat admin
+    @role('admin')
+        <li> <a href="/admin/authors">Penulis</a> </li>
+    @endrole
+
+// membuat halaman error (403) 
+resources/views/errors/403.blade.php
+
+// membuat Create
+    create => ['get' , 'admin/authors/create']  untuk menampilkan form
+    store  => ['post' , 'admin/authors']        untuk menyimpan data form
+
+    (create)
+    - kita buat navigasi di halaman index 
+        - contoh button (tambah) route nya /admin/authors/create
+            <button><a href="/admin/authors/create">Tambah</a></button>
+    - di controller nya (create)
+        return view('authors.create'); di arahkan ke view create
+    - buat form nya 
+        - copy form index dan lakukan perubahan
+        - form label dan submit nya di pisah (partial) @include('authors._form')
+    (store)
+    - di controller nya (store) 
+                                                                |   store(Request $request)
+        melakukan validasi                                      |   $this->validate($request, ['name' => 'require|unique:authors'] )
+        dan membuat author baru dengan memakai method create    |   Author::create(request->all())
+        return redirect('/admin/authors') (kembalikan ke halaman index)
+
+// membuat flash messages
+    // diperlukan untuk ada notifikasi nya jik gagal maupun berhasil
+    - di controller nya 
+        di (store)        
+        use Session;
+        // validate
+        // create
+        Session::flash("flash_notification", [
+            "level"   => "succes",
+            "message" => "Berhasil menyimpan $author->name"
+        ]);
+        //redirect        
+    - buat partial flash_notification (_flash.blade.php)
+        @if (session()->has('flash_notification.message'))
+            <div class="container">
+                <div class="alert alert-{{ session()->get('flash_notification.level') }}">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    {!! session()->get('flash_notification.message') !!}
+                </div>
+            </div>
+        @endif
+    // agar flash message ini bisa di gunakan di semua view 
+    - diletakkan ke layouts master
+        @include('layouts._flash')
+        @yield('content')
+    
+    // UPDATE (edit dan update)
+    edit    => ['get' , 'admin/authors/{id}/edit']  untuk menampilkan form
+    update  => ['put' , 'admin/authors/{id}']       untuk menyimpan form
+
+        // menambahkan field action pada datatable 
+        di controller
+            (index)
+            // data nya 
+            karna di table author tidak ada action kita buat sendiri
+                ->addColumn('action', function($author){                        // data yg akan diolah
+                        return view('datatable._action', [                      //->ini mengarahkan ke tombol UBAH
+                            'edit_url' => route('authors.edit', $author->id)    //->(mentah)route navigasi nya yang dikirim ke tombol
+                });
+            // diolah
+            addColumn('data' => 'action', 'name' => 'action', 'title', '', 'orderable' => false, 'searchable' =>false);
+
+            sampai disini data sudah ada tetapi tidak ada navigasi nya (<a href="" >Ubah</a>)
+            view navigasi nya ada di    (datatable._action.blade.php)
+            <a href="{{ $edit_url }}">Ubah</a>            // diambil dari data (mentah)
+        
+        // EDIT       = menampilkan form (dapur)
+        di controller
+            (edit)
+            {
+                $author = Author::find($id);
+                return view('authors.edit' compact('author'));
+            }
+        - buat tampilan form nya seperti create dan sedikit perubahan
+            (perubahan)
+            - li class active label nya berubah menjadi Ubah Penulis
+            - h2 = Ubah penulis
+            - panel body memakai form model binding
+            {!! Form::model($author, ['url' => route('authors.update', $author->id),
+                                      'method'=>'put', 
+                                      'class'=>'form-horizontal']) !!}
+            @include('authors._form')
+            {!! Form::close() !!}
+        
+        // UPDATE     = menyimpan data (diolah dan di simpan) 
+        di controller
+            (update)
+            {
+                // validasi terhadap field yg di kirim user kecuali untuk title record dengan id yang ingin dirubah                     
+                $this->validate($request, ['name' => 'required|unique:authors,name' . $id]);
+                // cari data author berdasarkan id                
+                $author = Author::find($id);
+                // data yang di cari di update                
+                $author->update($request->only('name'));
+                // set feedback
+                Session::flash('flash_notification', [
+                    'level' => "success",
+                    'message' => "Berhasil menyimpan $author->name"
+                ]);
+                // mengarahkan user kembali ke halaman index
+                return redirect('authors.index');
+
+            }
+        
+        // DELETE (Destroy)
+            edit    => ['' , 'admin/authors/{id}']  untuk menampilkan form
+
+            di controller
+                (Destroy)
+            //select data yang ingin di hapus berdasarkan id
+            Author::destroy($id);
+            // set feedback
+            Session::flash('flash_notification', [
+                'level' => "success",
+                'message' => "Penulis berhasil di hapus"
+            ])
+            // mengarahkan user kembali ke halaman index
+            return redirect('author.index');
+
+            // tambahkan item di action->data
+            ->addColumn('action', function($author){
+                    return view('datatable._action', [
+                        'model'      => $author,              // this
+                        'destroy_url' => route('authors.destroy', $author->id),  // this
+                        'edit_url'   => route('authors.edit', $author->id), 
+            
+            // di view _action.blade.php
+            {!! Form::model($model , ['url' => $destroy_url, 'method' => 'delete', 'class' => 'form-inline'] ) !!} 
+                <a href="{{ $edit_url }}">Ubah</a> |
+            {!! Form::submit('Hapus', ['class'=>'btn btn-xs btn-danger']) !!} 
+            {!! Form::close()!!} 
+    
+                
+         // penggunaan model event 
+         tujuan nya : untuk menghentikan proses penghapusan 
+                      JIKA penulis masih memiliki buku
+                      hentikan proses penghapusan &
+                      berikan feedback (keterangan)
+         di model
+            (Author)
+            public static function boot()
+            {
+                // author::deleting(function($author))
+                self::deleting(function($author)
+                {
+                    //mengecek apakah penulis masih memiliki buku
+                    if($author->books->count() > 0)
+                    {
+                        //menyiapkan pesan error 
+                        $html  = 'Penulis tidak bisa di hapus karena masih memiliki buku : '
+                        $html .= '<ul>';
+                        foreach($author->books as $book)
+                        {
+                            $html .= "<li>$book->title</li>";
+                        }
+                        $html .= '</ul>';
+
+                        Session::flash('flash_notification',[
+                            "level"     => "danger",
+                            "message"   => $html
+                        ]);
+
+                        return false;
+                    }
+                });
+            }
+
+       di controller 
+            (destroy) change
+            // jika author tidak bisa di delete kembali ke index
+            if (!Author::destroy($id)) return redirect()->back();      
+        
+       // menkonfirmasi ketika menghapus data 
+       dengan javascript :''v
+       //buat asset di//
+       public/js/custom.js
+       $(document).ready(function () {
+            $(document.body).on('submit', '.js-confirm', function () {
+                var $el = $(this)
+                var text = $el.data('confirm') ? $el.data('confirm') : 'Anda yakin melakukan tindakan ini ?'
+                var c = confirm(text);
+                return c;
+            });
+        });
+       //panggil di layout master
+       <script scr="/js/custom.js"></script>
+       //di controller index
+       di item action tambahkan 
+       'confirm_message' => 'yakin mau menghapus' . $author->name . '?'
+       //_action.blade.php
+       {!! Form::model($model, ['url' => $form_url,
+                                'method' => 'delete',
+                                'class' => 'form-inline js-confirm',        // di rubah sebelum-> 'form-inline'
+                                'data-confirm' => $confirm_message] ) !!}   // tambahan
+       
+CRUD Buku
+-siapkan controller
+    php artisan make:controller BooksController --resource
+-routing
+Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'role:admin']], function() {
+    Route::resource('books', 'BooksController');    
+})
+-menampilkan daftar buku(INDEX)
+    -buat navigasi nya di layouts app
+        <li><a href="/admin/books">Buku</a></li>
+    -menggunakan datatable untuk menampilkan field yang ada di table books
+    use item yajra; 
+    use App/Book;
+
+    di contoller
+        (index)
+    if ($request->ajax()) {
+            $books = Book::with('author');      //penggunaan method with() akan meload relasi dari book
+            return Datatable::of($books)
+                ->addColumn('action', function($book){
+                    return view('datatable._action', [
+                        'model'         => $book,
+                        'destroy_url'   => route('books.destroy', $book->id),
+                        'edit_url'      => route('books.edit', $book->id),
+                        'confirm_message' => 'Yakin mau menghapus ' . $book->title . ' ?'
+                    ]);
+                })->make(true);
+        }
+        $html = $htmlBuilder
+            ->addColumn(['data' => 'title' ,'name' => 'title','title' => 'Judul'])
+            ->addColumn(['data' => 'amount' ,'name' => 'amount','title' => 'Jumlah'])
+            ->addColumn(['data' => 'author.name' ,'name' => 'author.name','title' => 'Penulis'])
+            ->addColumn(['data' => 'action' ,'name' => 'action','title' => '', 'orderable' => false, 'searchable' => false]);
+            return view('books.index', compact('html'));
+
+    di view 
+        (books.index)
+        buat seperti index authors
+
+- membuat data buku (CREATE and STORE)
+    create = form data mentah
+    store  = pembuatan data jadi
+
+    di controller 
+        (create)
+    return view('books.create');
+
+    di view (books.create)  create & _form
+        hampir sama dengan view create authors
+        -penambahan value di form 'files' => 'true'  // membuat form dapat mengupload file
+    buat partial _form buat create book.
+    // cara pembuatan dropdown
+    {!! Form::select('author_id', [''=>'']+App\Author::pluck('name','id')->all(), null) !!}
+    //tombol upload
+    {!! Form::file('cover') !!}
+
+
+
+
+    di controller
+        (store)
+    public function store(Request $request)
+    {
+        // isi field cover jika ada cover yang diupload
+        $this->validate($request, [
+         'title'     => 'required|unique:books,title',// harus| berbeda dengan isian field title pada table books
+         'author_id' => 'required|exist:authors,id',  // harus| dan harus terdapat pada field id di table authors
+         'amount'    => 'required|numeric',           // harus| dan berupa angka
+         'cover'     => 'image|max:2048',             // jika diisi harus berupa image dengan ukuran maksimal 2mb 
+         ]);
+          
+         $book = Book::create($request->except('cover')); // membuat buku dari request kecuali field cover
+
+         // isi field cover jika ada cover yang diupload
+         if ($request->hasFile('cover')) {  
+             $uploaded_cover = $request->file('cover');                          //DATA
+             // mengambil extension file(mengambil jpg)
+             $extension = $uploaded_cover->getClientOriginalExtension();         //JPG (extension)
+             // membuat nama file random beserta extension
+             $filename = md5(time()) . '.' . $extension;                         //NAMA + JPG
+             // menyimpan cover ke folder public/img
+                public_path = "/home/sultan/Public/LARAPUS/Larapus/public/IMG"
+                nunjukin lokasi untuk membuat directori IMG
+             $destinationPath = public_path() . DIRECTORY_SEPARATOR . 'IMG';    //TUJUAN
+             $uploaded_cover->move($destinationPath, $filename);               //DATA->TUJUAN,NAMA
+             // mengisi field cover di book dengan filename yang baru dibuat
+             $book->cover = $filename;
+             $book->save();
+
+             Session::flash("flash_notification", [
+                "level"   => "succes",
+                "message" => "Berhasil menyimpan $book->title"
+             ]);
+            
+            return redirect()->route('books.index');
+         }
+    }
+
+mengubah buku (EDIT && UPDATE) 
+    di controller 
+        (edit)
+        public function edit($id)
+        {
+            $book = Book::find($id);                        //cari data books berdasarkan id
+            return view('books.edit', compact('book'));     //kembalikan ke view
+        }
+    buat view nya (books.edit.blade.php) + && _form yang digunakan create
+    + tambahan di _form menampilkan cover (jika ada)
+        @if (isset($book) && $book->cover)
+            <p>
+            {!! Html::image(asset('img/'.$book->cover), null, ['class'=>'img-rounded img-responsive']) !!}
+            </p>
+        @endif
+
+    di controller
+        (update)
+        use Illuminate\Support\Facades\file;
+        public function update(Request $request, $id)
+        {
+            $this->validate($request, [
+                            //harus unik tetapi bisa diizinkan title yang sama dengan sekarang yang di gunakan               
+            'title'     => 'required|unique:books,title,' .  $id,   //where('title',2)    
+            'author_id' => 'required|exists:authors,id',              
+            'amount'    => 'required|numeric',
+            'cover'     => 'image|max:2048'
+            ]);
+
+            $book = Book::find($id);
+            $book->update($request->all());
+
+            if ($request->hasFile('cover')) {
+                $filename = null;
+                //mengambil cover yang di upload berikut extensinya
+                $uploaded_cover = $request->file('cover');                        // DATA
+                $extension = $uploaded_cover->getClientOriginalExtension();       //EXTENSION
+                //membuat nama file random dengan extension
+                $filename = md5(time()). '.' . $extension;                        //NAMA
+                //menunjukkan lokasi penympanan dan membuat folder img
+                $destinationPath = public_path() . DIRECTORY_SEPARATOR . 'img';   //TUJUAN
+                // memindahkan data ke folder public/img
+                $uploaded_cover->move($destinationPath, $filename);              //DATA->(TUJUAN,NAMA);
+
+                //hapus cover lama, jika ada
+                if ($book->cover)
+                    $old_cover = $book->cover;
+                    $filepath = public_path() . DIRECTORY_SEPARATOR . 'img'
+                    . DIRECTORY_SEPARATOR . $book->cover;
+                    
+                    try {
+                        file::delete($filepath);
+                    } catch (FileNotFoundException $e){
+                        //File sudah dihapus/tidak ada
+                    }
+                    
+                    // ganti filed cover dengan cover yang baru
+                    $book->cover = $filename;
+                    $book->save();
+            }
+            //feedback
+            Session::flash("flash_notification", [
+                "level" =>"success",
+                "message" => "berhasil menyimpan $book->title"
+            ]);
+
+            return redirect()->route('books.index');
+        }
+
+
+hapus buku (destroy)        
+    di controller
+        (DELETE)
+        public function destroy($id)
+        {
+            $book = Book::find($id);
+
+            // hapus cover(DATA) lama jika ada 
+            if($book->cover)
+                $old_cover = $book->cover;
+                $filepath  = public_path() . DIRECTORY_SEPARATOR('img')
+                . DIRECTORY_SEPARATOR . $book->cover;
+
+                try{
+                    File::delete($filepath);
+                }catch (FilenotFoundException $e) {
+                    //file sudah di hapus / tidak ada
+                }
+
+                $book->delete();
+
+                Session::flash('flash_notification', [
+                    "level"     => "success",
+                    "message"   => "Buku berhasil di hapus"
+                ]);
+
+                return redirect('/admin/books')
+        }
+
+Penggunaan Form Request (pemisahan validasi)
+validasi yang jumlah field yang banyak
+{
+    php artisan make:request StoreBookRequest
+    php artisan make:request UpdateBookRequest
+
+        di request (store)
+            (StoreBookRequest)
+    Use Illuminate\Support\Facades\Auth ;
+
+    di authorize()                     --> yang menentukan akses user
+    return Auth::check();              --> hanya yang sudah login
+
+    di rules()                         --> menentukan aturan validasi
+        return [
+            'title'     => 'required|unique:books,title',     //tidak boleh sama dari yang ada di database
+            'author_id' => 'required|exist:author,id',
+            'amount'    => 'numeric',
+            'cover'     => 'image|max:2048'
+        ];
+
+        di request (update)
+            (UpdateBookRequest)
+    public function UpdateBookRequest extends StoreBookRequest
+    Use Illuminate\Support\Facades\Auth ;
+
+    di authorize()
+    return Auth::check();
+
+    di rules()
+    $rules = parent::rules();
+    $rules['title'] = 'required|unique:books,title,' . $this->route('book');
+    return $rules;
+
+    gunakan juga pada authors
+}
+
+Penggunaan Selectize
+{
+    library javascript Selectize
+    https://github.com/selectize/selectize.js
+
+    folder dist
+    • public/js/selectize.min.js  (standalone)
+    • public/css/selectize.css
+    • public/css/selectize.bootstrap3.css
+
+    app.blade.php
+    <link rel="stylesheet" href="/css/selectize.css">
+    <link rel="stylesheet" href="/css/selectize.bootstrap3.css">
+    <script src="/js/selectize.min.js"></script>   
+
+    di public/js/costom.js
+    $('.js-selectize').selectize({
+    sortField: 'text'
+    });
+
+    di _form (books)
+    tambakan class di form penulis (select)
+    ['class' => 'js-Selectize',
+    'placeholder' => 'Pilih Penulis']
+}
+        
+Day 5   -------------------------------------------------------------------------------------------------------
+MEMBUAT FITUR NON ADMIN
+        (Delete)
+    - PEMINJAMAN berkaitan dengan PENGHAPUSAN buku oleh admin.
+      jika buku sedang di pinjam admin tidak bisa menghapus buku tersebut 
+        (Update)
+    - (amount) ketika admin merubah jumlah total buku(amount)
+      jika buku yang sedang dipinjam ada 3 maka admin tidak boleh mengubah jumlah buku(amount) kurang dari 3
+      
+buat model dan migration meminjam (BorrowLog)
+(
+    migration(
+        public function up()
+        {
+            Schema::create('borrow_logs', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('book_id')->unsigned()->index();
+            $table->integer('user_id')->unsigned()->index();
+            $table->boolean('is_returned')->default(false);
+            $table->timestamps();
+    
+            $table->foreign('book_id')->references('id')->on('books')
+            ->onDelete('cascade')
+            ->onUpdate('cascade');
+            $table->foreign('user_id')->references('id')->on('users')
+            ->onDelete('cascade')
+            ->onUpdate('cascade');
+            });
+        }
+    )
+    
+    model(
+        mass assignment
+        protected $fillable = ['user_id','book_id','is_returned'];
+        relasi
+        public function user()
+        {
+            return $this->belongsTo(User::class);
+        }
+
+        public function book()
+        {
+            return $this->belongsTo(Book::class);
+        }
+    )
+)
+
+buat data seed
+(
+    $member = User::where('email', 'member@gmail.com')->first();
+        #member = User::find('id',2)  (juga bisa)
+        BorrowLog::create(['user_id' => $member->id ,'book_id' => $book1->id, 'is_returned' => 0]);
+        BorrowLog::create(['user_id' => $member->id ,'book_id' => $book2->id, 'is_returned' => 0]);
+        BorrowLog::create(['user_id' => $member->id ,'book_id' => $book3->id, 'is_returned' => 1]);
+)
+
+buat controller yang mengatur halaman index
+(
+    //buat controller
+    php artisan make:controller (GuestController)
+
+    // route
+    Route::get('/', 'GuestController@index')
+
+    //di controller
+        (index)
+        use App\Http\Requests;
+        use Yajra\Datatables\Html\Builder;
+        use Yajra\Datatables\Datatables;
+        use App\Book;
+        use Laratrust\LaratrustFacade as Laratrust;
+
+        public function index(Request $request, Builder $htmlBuilder)
+        {
+            if ($request->ajax()) {
+                $books = Book::with('author') ;
+                return Datatables::of($books)
+
+                ->addColumn('action', function($book){
+                    if (!Laratrust::hasRole('member')) return '';      // link untuk meminjam buku hanya bisa terlihat dari role member
+                    return '<a class="btn btn-xs btn-primary" href="#">Pinjam</a>';
+                })->make(true);
+            }
+
+            $html = $htmlBuilder
+                ->addColumn(['data' => 'title', 'name' => 'title', 'title' => 'Judul'])
+                ->addColumn(['data' => 'author.name', 'name' => 'auhtor.name', 'title' => 'Penulis'])   (author.name = $author->name)
+                ->addColumn(['data' => 'action', 'name' => 'action', 'title' => '', 'orderable' => false, 'searchable' => false]);
+            return view('guest.index' , compact('html'));
+        }
+    
+    //di view
+    samain kayak index yang lain
+    perbedaan: 
+    - tidak pakek breadcrumb
+    - tidak ada button tambah
+    
+)
+
+untuk melakukan peminjaman kita memerlukan request GET ke BooksController
+(
+    // di route 
+    ini di sebut named routing
+    Route::get('books/{book}/borrow', [
+        'middleware' => ['auth', 'role:member'],   // harus login dlu , dan member
+        'as'         => 'guest.books.borrow',      // nama pada routing
+        'uses'       => 'BooksController@borrow'   // menentukan method dan controller apa yang akan kita gunakan
+    ]);
+
+    //di controller 
+        (borrow) this store
+        use Illuminate\Database\Eloquent\ModelNotFoundException;    // 
+        use App\BorrowLog;
+        use Illuminate\Support\Facades\Auth;
+
+        public function borrow()
+        {
+            try {
+                //memastikan id buku yang digunakan valid.
+                //jika fail method ini akan melemparkan ModelNotFoundException
+                //jadi menggunakan {try and catch}
+                $book = Book::findOrFail($id);     
+                BorrowLog::create([                     //membuat peminjaman baru
+                    'user_id' => Auth::user()->id,
+                    'book_id' => $book->id
+                ]);
+                Session::flash('flash_notification', [  //feedback sukses
+                    "level"     => "success",
+                    "message"   => "Berhasil meminjam $book->title"
+                ]);
+            } catch (ModelNotFoundException $e) {
+                Session::flash('flash_notification', [  //feedback gagal
+                    "level"     => "danger",
+                    "message"   => "Buku tidak di temukan"
+                ]);
+            }
+            return redirect('/');
+        }
+)
+
+membatasi jumlah buku yang di pinjam 
+(
+    tujuan:
+    hanya bisa meminjam 1 buku dalam satu waktu untuk judul yang sama
+
+    EXCEPTION = PENGECUALIAN
+
+    buat app/Exception/BookException.php
+    (
+        namespace App\Exceptions;
+    
+        use Exception;
+        
+        class BookException extends Exception 
+        {
+        
+        }
+    )
+
+    di model
+        - buat method borrow dan relationship(BorrowLog)
+    (
+        use App\Book;
+        use App\BorrowLogs;
+        use App\Exception\BookException;
+        public function Borrow(Book $book)
+        {
+            // cek apakah buku ini sedang dipinjam oleh user
+            pilih data dimana inputan book_id sama dengan di database book_id dan is returned lebih dari 0
+            if($this->borrowlogs()->where('book_id', $book->id)->where('is_returned', 0)->count() > 0)
+            {
+                throw new BookException("Buku $book->title Sedang Anda Pinjam.");   //$e
+            } 
+
+            $borrowLog = BorrowLog::create(['user_id' => $this->id, 'book_id' => $book->id]);
+            return $borrowLog;
+        }
+
+        public function borrowLogs() //semua data peminjaman
+        {
+            return $this->hasMany(BorrowLogs::class);
+        }
+    )    
+    di controller
+        (borrow)
+
+
+    
+)
+
+172 : 188 of 349
+
+pengunaan query scope
+(
+    di model borrow
+    public function scopeReturned($query)    telah di kembalikan
+    {
+        return $query->where('is_returned',1);
+    }
+
+    public function scopeBorrowed($query)   lagi di pinjam
+    {
+        return $query->where('is_returned',0);
+    }
+
+    (App\BorrowLog::returned()->first();) cara manggil
+)
+
+membedakan Tampilan Dashboard untuk Admin dan Member
+(
+    di controller
+    home->index
+    use Laratrust\LaratrustFacade as Laratrust;
+
+    laratrust::hasrole = mengecek role dari user dan panggil method yang akan menghandle
+    if(Laratrust::hasRole('admin'))  return $this->adminDashboard();   
+    if(Laratrust::hasRole('member')) return $this->memberDashboard();
+
+    protected function adminDashboard()
+    {
+        return view('dashboard.admin');
+    }
+
+    protected function memberDashboard()
+    {
+        return view('dashboard.member');
+    }
+
+    di view 
+    buat seperti view ('/home')
+)
+
+menampilkan buku yang sedang di pinjam (borrowed)
+    di controller (homecontroller)
+
+    protected function memberDashboard()
+    {
+        $borrowLog = Auth::user()->borrowed()->get();          //method borrowed diambli dari model user
+        return view('dashboard.member', compact('borrowLog')); //kirim ke view member
+    }
+
+    di view dashboard
+        (member)
+    <div class="panel-body">
+    Selamat datang di Larapus.
+        <table class="table">
+            <tbody>
+                <tr>
+                    <td class="text-muted">Buku dipinjam</td>
+                    <td>
+                        @if ($borrowLogs->count() == 0)
+                        Tidak ada buku dipinjam
+                        @endif
+                        <ul>
+                        @foreach ($borrowLogs as $borrowLog)
+                        <li>{{ $borrowLog->book->title }}</li>
+                        @endforeach
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+pengembalian buku
+(
+    buat route
+        di BooksController (returnBack)
+
+    di controller
+    booksController
+    public function returnBack($book_id)
+    {
+        $borrowLog = BorrowLog::where('user_id',Auth::user()->id)   //ambil data berdsarkan
+            ->where('book_id', $book_id)                            // book id
+            ->where('is_returned', 0)                               // returned = 0
+            ->first();                                              //ambil data pertama
+        if ($borrowLog) {
+            $borrowLog->is_returned = true;                         //ubah data nya menjadi 1 = true
+            $borrowLog->save();
+
+            Session::flash('flash_notification', [
+                "level"     => "success",
+                "message"   => "Berhasil mengembalikan ". $borrowLog->book->title
+            ]);
+        }
+        return redirect('/home');
+    }
+    di view 
+    dsahboard->member
+
+    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Buku Dipinjam</td>
+                                <td>
+                                    @if ($borrowLogs->count() == 0)
+                                        Tidak ada buku dipinjam
+                                    @endif
+                                <ul>
+                                    @foreach ($borrowLogs as $borrowLog)
+                                        <li>
+                                            {!! Form::open(['url' => route('member.books.return', $borrowLog->book_id), 
+                                            'method' => 'put',
+                                            'class'  => 'form-inline js-confirm',
+                                            'data-confirm' => "Anda yakin hendak mengembalikan" . 
+                                            $borrowLog->book->title . "?"] ) !!}
+                                            
+                                            {!! $borrowLog->book->title !!}
+                                            {!! Form::submit('kembalikan', ['class' => 'btn btn-xs btn-default'])!!}
+                                            {!! Form::close() !!}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+)
+------------------------------------------------------------------------------------------------------------      
