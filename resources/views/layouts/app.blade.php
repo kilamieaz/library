@@ -54,9 +54,9 @@
                             <li><a href="{{ url('/home') }}">Dashboard</a></li>
                         @endif
                         @role('admin')
-                            <li><a href="/admin/authors">Penulis</a></li>                            
-                            <li><a href="/admin/books">Buku</a></li>                            
-                            <li><a href="/admin/member">member</a></li>                            
+                            <li><a href=" {{ route('authors.index') }}">Penulis</a></li>                            
+                            <li><a href=" {{ route('books.index') }}">Buku</a></li>                            
+                            <li><a href=" {{ route('members.index') }}">member</a></li>                            
                         @endrole
                         @if(Auth::check())
                             <li><a href="{{ url('/settings/profile') }}">Profil</a></li>
