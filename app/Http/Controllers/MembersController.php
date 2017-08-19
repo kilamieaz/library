@@ -9,6 +9,11 @@ use App\User;
 use Yajra\Datatables\Html\Builder;
 use Yajra\Datatables\Facades\Datatables;
 
+use App\Http\Requests\StoreMemberRequest;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
+
+
 class MembersController extends Controller
 {
     public function index(Request $request, Builder $htmlBuilder)
@@ -36,12 +41,35 @@ class MembersController extends Controller
 
     public function create()
     {
-        //
+        return view('members.create');  
     }
 
-    public function store(Request $request)
+    public function store(StoreMemberRequest $request)
     {
-        //
+        $password = str_random(6);
+        $data = $request->all();
+        $data['password'] = bcrypt($password);
+        // bypass verifikasi
+        $data['is_verified'] = 1;
+        $member = User::create($data);
+        //set role
+        $memberRole = Role::where('name','member')->first();
+        $member->attachRole($memberRole);
+
+        //kirim email
+        Mail::send('auth.emails.invite',compact('member', 'password'), function ($m) use ($member) {
+            $m->to($member->email, $member->name)->subject('Anda telah di daftarkan di Larapus!');
+        });
+
+        Session::flash("flash_notification",[
+            "level"     => "success",
+            "message"   => "Berhasil menyimpan member dengan email ".
+                           "<strong>". $data['email'] ."</strong>".
+                           " dan password <strong>".$password."</strong>"
+        ]);
+
+        return redirect()->route('members.index');
+
     }
 
     public function show($id)
