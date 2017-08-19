@@ -21,6 +21,9 @@ class MembersController extends Controller
         if ($request->ajax()){
             $members = Role::where('name','member')->first()->users;
             return Datatables::of($members)
+            ->addColumn('name', function($member){
+                return '<a href="'.route('members.show',$member->id).'">'.$member->name.'</a>';
+            })
             ->addColumn('action', function($member){
                 return view('datatable._action', [
                    'model'           => $member,
@@ -74,7 +77,8 @@ class MembersController extends Controller
 
     public function show($id)
     {
-        //
+        $member = User::find($id);
+        return view('members.show', compact('member'));
     }
 
     public function edit($id)
