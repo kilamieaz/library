@@ -12,7 +12,7 @@ use Yajra\Datatables\Facades\Datatables;
 use App\Http\Requests\StoreMemberRequest;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Mail;
-
+use App\Http\Requests\UpdateMemberRequest;
 
 class MembersController extends Controller
 {
@@ -79,12 +79,19 @@ class MembersController extends Controller
 
     public function edit($id)
     {
-        //
+        $member = User::find($id);
+        return view('members.edit', compact('member'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateMemberRequest $request, $id)
     {
-        //
+        $member = User::find($id);
+        $member->update($request->only('name','email'));
+        Session::flash("flash_notification", [
+            "level"     =>  "success",
+            "message"   =>  "Berhasil menyimpan $member->name"
+        ]);
+        return redirect()->route('members.index');
     }
 
     public function destroy($id)
