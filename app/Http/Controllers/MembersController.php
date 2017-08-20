@@ -101,13 +101,28 @@ class MembersController extends Controller
     public function destroy($id)
     {
         $member = User::find($id);
-        if ($member->hasRole('member')){
+        if (!$member->hasRole('member') && $member->books->count() > 0){
             $member->delete();
             Session::flash("flash_notification", [
-                "level"     => "success",
-                "message"   => "Member berhasil dihapus"
+            "level"     => "success",
+            "message"   => "Member berhasil dihapus"
             ]);
+            return redirect()->route('members.index');
+        } else{
+            // $html  = 'Member tidak bisa di hapus karena masih memiliki buku : ';
+            // $html .= '<ul>';
+            // foreach ($member->books as $book) {
+            //     $html .= "<li>$book->title</li>";
+            // }
+            // $html .= '</ul>' ;
+            
+            Session::flash("flash_notification", [
+                "level"     => "danger",
+                "message"   => "Member tidak bisa di hapus karena masih memiliki buku"
+            ]);
+            
+            // membatalkan proses penghapusan
+            return redirect()->back();
         }
-        return redirect()->route('members.index');
     }
 }
