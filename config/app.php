@@ -164,9 +164,11 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         Collective\Html\HtmlServiceProvider::class,
         Laratrust\LaratrustServiceProvider::class,
-        Yajra\Datatables\DatatablesServiceProvider::class,
-        Anhskohbo\NoCaptcha\NoCaptchaServiceProvider::class,
-
+        Yajra\Datatables\DatatablesServiceProvider::class,   //datatables
+        Anhskohbo\NoCaptcha\NoCaptchaServiceProvider::class,  //captcha
+        Maatwebsite\Excel\ExcelServiceProvider::class,     //excell
+        Barryvdh\DomPDF\ServiceProvider::class,          //pdf
+        
         /*
          * Package Service Providers...
          */
@@ -180,6 +182,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+
 
     ],
 
@@ -232,6 +235,9 @@ return [
         'Form' => Collective\Html\FormFacade::class,
         'Html' => Collective\Html\HtmlFacade::class,
         'Laratrust' => Laratrust\LaratrustFacade::class,
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'PDF' => Barryvdh\DomPDF\Facade::class,
+       
 
     ],
 

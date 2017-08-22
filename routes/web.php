@@ -32,6 +32,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth','role:admin']], funct
     Route::resource('books', 'BooksController');
     Route::resource('members', 'MembersController');
     Route::get('statistics', ['as'=>'statistics.index','uses'=>'StatisticsController@index']);
+
+    Route::get('export/books', [
+        'as' => 'export.books',
+        'uses' => 'BooksController@export'
+    ]);
+    Route::post('export/books', [
+        'as' => 'export.books.post',
+        'uses' => 'BooksController@exportPost'
+    ]);
 });
 
 Route::get('books/{book}/borrow', [

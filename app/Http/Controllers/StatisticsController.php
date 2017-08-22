@@ -12,7 +12,7 @@ class StatisticsController extends Controller
     public function index(Request $request, Builder $htmlBuilder)
     {
         if ($request->ajax()) {
-            $stats = BorrowLog::with('book','user');
+            $stats = BorrowLog::with('book','user')->get();
             if ($request->get('status') == 'returned') $stats->returned();
             if ($request->get('status') == 'not-returned') $stats->borrowed();
 

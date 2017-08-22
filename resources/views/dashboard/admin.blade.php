@@ -49,7 +49,7 @@
 
     var authorChart = new Chart(ctx, {
         type: 'bar',
-        data: data,
+        data: data, 
         options: options
     });
     </script>

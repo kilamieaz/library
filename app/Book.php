@@ -55,7 +55,7 @@ class Book extends Model
 
     public function getBorrowedAttribute()
     {
-        return $this->borrowLogs->borrowed()->count();
+        return $this->borrowLogs()->borrowed()->count();
     }
 
     

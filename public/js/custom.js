@@ -5,11 +5,9 @@ $(document).ready(function () {
         var text = $el.data('confirm') ? $el.data('confirm') : 'Anda yakin melakukan tindakan ini ?'
         var c = confirm(text);
         return c;
-    });
-
-    // add selectize to select element
-    $('#select-beast').selectize({
-    create: true,
-    sortField: 'text'
+        // add selectize to select element
+    $('.js-selectize').selectize({
+        sortField: 'text'
+        });
     });
 });

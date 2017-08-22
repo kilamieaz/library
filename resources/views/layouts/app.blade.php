@@ -14,20 +14,37 @@
     <link href="/css/font-awesome.min.css" rel='stylesheet' type='text/css'>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/app.css" rel="stylesheet">
-
+    <style>
+        #ScrollTop
+        {
+            cursor: pointer;
+            position:fixed;
+            right:25px;
+            bottom:50px;
+            border:3px solid #585858;
+            background-color:white;
+            color:#585858;
+            border-radius:100%;
+            height:50px;
+            width:50px;
+            font-size:13px;
+            display:none;
+            text-align: center;
+            visibility: visible;
+            opacity: .2;
+        }
+    </style>
+    
     {{-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> --}}
     <link href="/css/jquery.dataTables.css" rel="stylesheet">
     <link href="/css/dataTables.bootstrap.css" rel="stylesheet">
     <link href="/css/selectize.css" rel="stylesheet" >
     <link href="/css/selectize.bootstrap3.css"  rel="stylesheet" >
     <!-- Scripts -->
-    <script>
-        window.Laravel = {!! json_encode([
-            'csrfToken' => csrf_token(),
-        ]) !!};
-    </script>
+   
 </head>
 <body>
+<div class="container" id="element"></div>
     <div id="app">
         <nav class="navbar navbar-default navbar-static-top">
             <div class="container">
@@ -99,15 +116,37 @@
         @include('layouts._flash')
         @yield('content')
     </div>
+    
+    <a id="ScrollTop" onclick="scrolltotop()">
+        <i class="fa fa-caret-up fa-3x"></i>
+    <a>
 
     <!-- Scripts -->
     <script src="/js/jquery-3.2.1.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+     <script>
+        $(document).ready(function(){
+            $(window).scroll(function(){
+                if ($(window).scrollTop() > 100) {
+                    $('#ScrollTop').fadeIn();
+                } else {
+                    $('#ScrollTop').fadeOut();
+                }
+            });
+        });
+
+        function scrolltotop()
+        {
+            $('html, body').animate({scrollTop : 0},500);
+        }
+
+    </script>
 
     {{-- datatables --}}
     <script src="/js/jquery.dataTables.min.js"></script>
     <script src="/js/dataTables.bootstrap.min.js"></script>
     <script src="/js/custom.js"></script>
+    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
     @yield('scripts')
 </body>
 </html>
