@@ -14,6 +14,7 @@
     <link href="/css/font-awesome.min.css" rel='stylesheet' type='text/css'>
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/app.css" rel="stylesheet">
+    <link href="/css/fakeLoader.css" rel="stylesheet">
     <style>
         #ScrollTop
         {
@@ -44,7 +45,7 @@
    
 </head>
 <body>
-<div class="container" id="element"></div>
+<div class="fakeloader"></div>
     <div id="app">
         <nav class="navbar navbar-default navbar-static-top">
             <div class="container">
@@ -146,7 +147,16 @@
     <script src="/js/jquery.dataTables.min.js"></script>
     <script src="/js/dataTables.bootstrap.min.js"></script>
     <script src="/js/custom.js"></script>
-    <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+    {{--  <script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>  --}}
+    <script src="/js/fakeLoader.min.js"></script>
+    <script type="text/javascript">
+        $(".fakeloader").fakeLoader({
+        timeToHide:1200, //Time in milliseconds for fakeLoader disappear
+        zIndex:"999",//Default zIndex
+        spinner:"spinner2",//Options: 'spinner1', 'spinner2', 'spinner3', 'spinner4', 'spinner5', 'spinner6', 'spinner7'
+        bgColor:"#eb6864", //Hex, RGB or RGBA colors
+        });
+    </script>
     @yield('scripts')
 </body>
 </html>
