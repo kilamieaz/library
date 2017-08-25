@@ -32,7 +32,10 @@ $(document).ready(function () {
                 _token  : $(this).children('input[name=_token]'.val())
             }
         }).done(function(data) {
-
+            // cari baris yang di hapus
+            baris = $('#form-'+data.id).closest('tr');
+            // hilangkan baris (fadeout kemudian remove)
+            baris.fadeOut(300, function() {$(this).remove});
         });
     });
 });
