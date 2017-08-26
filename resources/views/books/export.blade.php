@@ -21,9 +21,10 @@
                         {!! Form::label('author_id', 'Penulis', ['class'=>'col-md-2 control-label']) !!}
                         <div class="col-md-4">
                         {!! Form::select('author_id[]', [''=>'']+App\Author::pluck('name','id')->all(),null, [
-                        'class'=>'js-selectize',
-                        'multiple',
-                        'placeholder' => 'Pilih Penulis']) !!}
+                        'class'=>'selectize-input items not-full has-options has-items',
+                        'id' => 'select-multiple-selectized',
+                        'placeholder' => 'Pilih Penulis',
+                        'multiple' => 'multiple']) !!}
                         {!! $errors->first('author_id', '<p class="help-block">:message</p>') !!}
                         </div>
                     </div>

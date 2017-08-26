@@ -39,7 +39,7 @@
     {{-- <link href="{{ asset('css/app.css') }}" rel="stylesheet"> --}}
     <link href="/css/jquery.dataTables.css" rel="stylesheet">
     <link href="/css/dataTables.bootstrap.css" rel="stylesheet">
-    <link href="/css/selectize.css" rel="stylesheet" >
+    {{--  <link href="/css/selectize.css" rel="stylesheet" >  --}}
     <link href="/css/selectize.bootstrap3.css"  rel="stylesheet" >
     <!-- Scripts -->
    
@@ -69,16 +69,23 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="nav navbar-nav">
                         @if (Auth::check())
-                            <li><a href="{{ url('/home') }}">Dashboard</a></li>
+                        {{--  <li><a href="{{ url('/home') }}">Dashboard</a></li>  --}}
+                            {!! Html::smartNav(url('/home'), 'Dashboard') !!}
                         @endif
                         @role('admin')
-                            <li><a href=" {{ route('authors.index') }}">Penulis</a></li>                            
-                            <li><a href=" {{ route('books.index') }}">Buku</a></li>                            
-                            <li><a href=" {{ route('members.index') }}">Member</a></li>                            
-                            <li><a href=" {{ route('statistics.index') }}">Peminjaman</a></li>                            
+                            {{--  <li><a href=" {{ route('authors.index') }}">Penulis</a></li>                              --}}
+                            {{--  <li><a href=" {{ route('books.index') }}">Buku</a></li>                              --}}
+                            {{--  <li><a href=" {{ route('members.index') }}">Member</a></li>                              --}}
+                            {{--  <li><a href=" {{ route('statistics.index') }}">Peminjaman</a></li>                              --}}
+                            {!! Html::smartNav( route('authors.index'), 'Penulis') !!}
+                            {!! Html::smartNav( route('books.index'), 'Buku') !!}
+                            {!! Html::smartNav( route('members.index'), 'Member') !!}
+                            {!! Html::smartNav( route('statistics.index'), 'Peminjaman') !!}
+                            
                         @endrole
                         @if(Auth::check())
-                            <li><a href="{{ url('/settings/profile') }}">Profil</a></li>
+                            {{--  <li><a href="{{ url('/settings/profile') }}">Profil</a></li>  --}}
+                            {!! Html::smartNav( url('/settings/profile'), 'Profil') !!}
                         @endif
                     </ul>
 
@@ -157,6 +164,7 @@
         bgColor:"#eb6864", //Hex, RGB or RGBA colors
         });
     </script>
+    <script src="/js/selectize.min.js"></script>
     @yield('scripts')
 </body>
 </html>

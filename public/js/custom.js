@@ -5,9 +5,15 @@ $(document).ready(function () {
         var text = $el.data('confirm') ? $el.data('confirm') : 'Anda yakin melakukan tindakan ini ?'
         var c = confirm(text);
         return c;
-    // add selectize to select element
-    $('#js-selectize').selectize({
-        sortField: 'text'
+        // add selectize to select element
+        $('#select-selectized').selectize();
+        });
+        $('#select-multiple-selectized').selectize({
+            delimiter: ',',
+            persist: false,
+            onDelete: function(values) {
+                return confirm(values.length > 1 ? 'Are you sure you want to remove these ' + values.length + ' items?' : 'Are you sure you want to remove "' + values[0] + '"?');
+            }
         });
     });
     //delete review book
